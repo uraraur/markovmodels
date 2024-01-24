@@ -46,7 +46,7 @@ x = np.arange(1, 1000)
 #plt.xlim(0, 40)
 #plt.show()
 
-#--------------------------------------------------------------------------------------------
+""" #--------------------------------------------------------------------------------------------
 #2.Декодування тексту   
     
 
@@ -70,45 +70,66 @@ for i in alp:
 for l in text_n[1:]:
     count_bigr[p + l] += 1
     p = l
-
-print(count_bigr)
-
+ """
 #--------------------------------------------------------------------------------------------
 #3.Градка  
 
-L = 100
-n_iterations = 10**5
+L = 100                                  
+T = 10**5
 
-beta = 0.75
+beta = [-1, 0, 0.2, 0.441, 0.7, 1]
 
-grid = np.random.choice([-1, 1], size=(L, L))
+lat = np.random.choice([-1, 1], size=(L, L))
+lat_extend = np.zeros((L + 2, L + 2), dtype = int)
+#lat_extend[1:(L+1), 1:(L+1)] = lat
 
-def energy_at_point(spin, neighbors):
-    return -spin * np.sum(neighbors)
+def energy(i, j, lat):
+    i = i + 1
+    j = j + 1
+    lat_extend[1:(L+1), 1:(L+1)] = lat
+    return np.roll(lat_extend, 1, axis=0)[i, j] + np.roll(lat_extend, -1, axis=0)[i, j] + np.roll(lat_extend, 1, axis=1)[i, j] + np.roll(lat_extend, -1, axis=1)[i, j]
 
-for i in range(n_iterations):
+for i in range(T):
     row, col = random.randint(0, L - 1), random.randint(0, L - 1)
-
-    neighbors = []
-    if 0 <= row - 1 < L:
-        neighbors.append(grid[(row - 1) % L, col])
-    if 0 <= row + 1 < L:
-        neighbors.append(grid[(row + 1) % L, col])
-    if 0 <= col - 1 < L:
-        neighbors.append(grid[row, (col - 1) % L])
-    if 0 <= col + 1 < L:
-        neighbors.append(grid[row, (col + 1) % L])
-
-    energy_before = energy_at_point(grid[row, col], neighbors)
-    grid[row, col] *= -1
-    energy_after = energy_at_point(grid[row, col], neighbors)
-    p = 1/(1+np.exp(-2*beta * energy_after))
-    # print(i, p)
-    U = uniform(loc=0, scale=1).rvs()
-    if U < p:
-        grid[row, col] *= -1
-
-b = -1.5
-plt.imshow(grid, cmap='Greens', interpolation='nearest')
+    p = 1 / ( 1 + np.exp(2 * beta[0] * energy(row, col, lat)))
+    u = uniform(loc=0, scale=1).rvs()
+    if u < p:
+        lat[row, col] = -1
+    else:
+        lat[row, col] = 1
+plt.imshow(lat, cmap = 'Greys', interpolation='nearest')
 plt.show()
+ 
+""" #--------------------------------------------------------------------------------------------
+#3.Розподіли 
 
+a = 5
+b = 2
+
+uniform_dist = uniform(loc=0, scale=1)
+
+def my_beta(a, b):
+    x = [uniform_dist.rvs()]
+
+    for i in range(N):
+        U = uniform_dist.rvs()
+        V = uniform_dist.rvs()
+        if V <= ((U / X[i])**(a - 1) * ((1 - U)/(1 - X[i]))**(b - 1)):
+            x.append(U)
+        else:
+            x.append(x[i])
+    return x
+
+
+beta_samples = my_beta(a, b)
+
+x = np.linspace(0, 1, N)
+pdf_values = beta.pdf(x, a, b)
+
+plt.figure(figsize=(8, 6))
+plt.hist(beta_samples, bins=50, density=True, alpha=0.7)
+plt.plot(x, pdf_values, label=f'Beta({a}, {b}) PDF')
+plt.xlabel('X')
+plt.ylabel('Density')
+plt.legend()
+plt.show() """
